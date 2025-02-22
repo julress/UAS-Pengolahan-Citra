@@ -1,0 +1,92 @@
+# Install required modules
+!pip install numpy matplotlib imageio
+
+# Import modules
+import numpy as np
+import matplotlib.pyplot as plt
+import imageio.v2 as imageio
+
+# Fungsi untuk mengaplikasikan operator Roberts
+def roberts_operator(image):
+    kernel_x = np.array([[1, 0], [0, -1]])
+    kernel_y = np.array([[0, 1], [-1, 0]])
+    
+    gradient_x = convolve2d(image, kernel_x)
+    gradient_y = convolve2d(image, kernel_y)
+    
+    gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+    gradient_magnitude = np.uint8(255 * gradient_magnitude / gradient_magnitude.max())  # Normalisasi ke 0-255
+    
+    return gradient_magnitude
+
+# Fungsi untuk mengaplikasikan operator Sobel
+def sobel_operator(image):
+    kernel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+    kernel_y = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+    
+    gradient_x = convolve2d(image, kernel_x)
+    gradient_y = convolve2d(image, kernel_y)
+    
+    gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+    gradient_magnitude = np.uint8(255 * gradient_magnitude / gradient_magnitude.max())  # Normalisasi ke 0-255
+    
+    return gradient_magnitude
+
+# Fungsi untuk melakukan konvolusi 2D
+def convolve2d(image, kernel):
+    kernel_size = kernel.shape[0]
+    pad_size = kernel_size // 2
+    
+    # Padding gambar
+    image_padded = np.pad(image, ((pad_size, pad_size), (pad_size, pad_size)), mode='constant')
+    
+    # Inisialisasi output
+    output = np.zeros_like(image)
+    
+    # Loop untuk konvolusi
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            output[y, x] = (kernel * image_padded[y:y+kernel_size, x:x+kernel_size]).sum()
+    
+    return output
+
+# Membaca gambar
+image_path = '/content/peacock.jpg'
+try:
+    # Load the image as grayscale. This will convert to grayscale if needed.
+    image = imageio.imread(image_path)
+    # Check if the image is colored, then convert to grayscale if it is
+    if len(image.shape) > 2 and image.shape[2] == 3:
+        image = np.dot(image[..., :3], [0.299, 0.587, 0.114]).astype(np.uint8)
+    if image is None:
+        raise FileNotFoundError("Gambar tidak ditemukan atau path salah.")
+except Exception as e:
+    print(f"Error membaca gambar: {e}")
+    exit()
+
+# Mengaplikasikan operator Roberts dan Sobel
+roberts_edge = roberts_operator(image)
+sobel_edge = sobel_operator(image)
+
+# Menampilkan hasil
+plt.figure(figsize=(12, 6))
+
+plt.subplot(1, 3, 1)
+plt.title('Original Image')
+plt.imshow(image, cmap='gray')
+
+plt.subplot(1, 3, 2)
+plt.title('Roberts Edge Detection')
+plt.imshow(roberts_edge, cmap='gray')
+
+plt.subplot(1, 3, 3)
+plt.title('Sobel Edge Detection')
+plt.imshow(sobel_edge, cmap='gray')
+
+plt.show()
+
+# Analisis sederhana
+print("Analisis:")
+print("1. Operator Roberts menghasilkan tepi yang lebih tipis dan kurang halus dibandingkan dengan operator Sobel.")
+print("2. Operator Sobel lebih sensitif terhadap perubahan intensitas dan menghasilkan tepi yang lebih tebal dan halus.")
+print("3. Roberts lebih cepat dalam komputasi karena kernel yang lebih kecil, tetapi kurang akurat dalam mendeteksi tepi yang kompleks.")
