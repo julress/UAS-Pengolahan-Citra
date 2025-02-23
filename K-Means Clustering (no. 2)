@@ -1,0 +1,36 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import cv2
+
+# Membaca citra
+image = cv2.imread('/content/peacock.jpg')
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+plt.figure(figsize=(6, 6))
+plt.title("Original Image")
+plt.imshow(image)
+plt.axis('off')
+plt.show()
+
+# Cetak ulang citra ke bentuk 2D array (setiap baris adalah piksel)
+pixels = image.reshape((-1, 3))  # -1 artinya ukuran dihitung otomatis
+
+# Menggunakan K-Means untuk clustering
+k = 4 
+kmeans = KMeans(n_clusters=k, random_state=42)
+kmeans.fit(pixels)
+
+# Mendapatkan label dan centroid
+labels = kmeans.labels_
+centroids = kmeans.cluster_centers_
+
+# Membuat citra hasil segmentasi
+segmented_image = centroids[labels].reshape(image.shape)  # Mengubah kembali ke bentuk citra
+segmented_image = np.uint8(segmented_image)
+
+# Menampilkan hasil segmentasi
+plt.figure(figsize=(6, 6))
+plt.title(f"Segmented Image with {k} clusters")
+plt.imshow(segmented_image)
+plt.axis('off')
+plt.show()
